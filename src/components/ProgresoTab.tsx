@@ -351,29 +351,21 @@ export default function ProgresoTab() {
         throw new Error('No access token available');
       }
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/strava-activities`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            access_token: accessToken,
-            per_page: 30,
-          }),
-        }
-      );
+      const response = await fetch('/.netlify/functions/strava-activities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: accessToken,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch Strava activities');
       }
 
-      const { activities } = await response.json() as { activities: StravaActivity[] };
+      const activities = await response.json() as StravaActivity[];
 
       for (const activity of activities) {
         const { data: existing } = await supabase
