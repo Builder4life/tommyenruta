@@ -84,7 +84,7 @@ export function useStrava() {
   }, []);
 
   const getRedirectUri = () => {
-    return 'https://gran-fondo-ny-2026-t-6oeq.bolt.host';
+    return 'https://tommyenruta.netlify.app';
   };
 
   const connectStrava = async () => {
