@@ -71,14 +71,14 @@ Deno.serve(async (req: Request) => {
       const tokenResponse = await fetch("https://www.strava.com/oauth/token", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify({
+        body: new URLSearchParams({
           client_id: STRAVA_CLIENT_ID,
           client_secret: STRAVA_CLIENT_SECRET,
-          code,
+          code: code,
           grant_type: "authorization_code",
-        }),
+        }).toString(),
       });
 
       if (!tokenResponse.ok) {
@@ -128,14 +128,14 @@ Deno.serve(async (req: Request) => {
       const tokenResponse = await fetch("https://www.strava.com/oauth/token", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify({
+        body: new URLSearchParams({
           client_id: STRAVA_CLIENT_ID,
           client_secret: STRAVA_CLIENT_SECRET,
-          refresh_token,
+          refresh_token: refresh_token,
           grant_type: "refresh_token",
-        }),
+        }).toString(),
       });
 
       if (!tokenResponse.ok) {

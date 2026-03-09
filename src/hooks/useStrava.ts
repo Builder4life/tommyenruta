@@ -40,6 +40,8 @@ interface StravaTokens {
 }
 
 const STRAVA_TOKENS_KEY = 'strava_tokens';
+const STRAVA_CLIENT_ID = '209804';
+const REDIRECT_URI = 'https://tommyenruta.netlify.app';
 
 export function useStrava() {
   const [tokens, setTokens] = useState<StravaTokens | null>(null);
@@ -47,9 +49,6 @@ export function useStrava() {
   const [error, setError] = useState<string | null>(null);
   const [athleteProfile, setAthleteProfile] = useState<StravaAthlete | null>(null);
   const [athleteStats, setAthleteStats] = useState<StravaAthleteStats | null>(null);
-
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   // Load tokens from localStorage on mount
   useEffect(() => {
@@ -83,35 +82,9 @@ export function useStrava() {
     }
   }, []);
 
-  const getRedirectUri = () => {
-    return 'https://tommyenruta.netlify.app';
-  };
-
-  const connectStrava = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const redirectUri = getRedirectUri();
-      const apiUrl = `${supabaseUrl}/functions/v1/strava-auth?action=authorize&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get authorization URL');
-      }
-
-      const { authUrl } = await response.json();
-      window.location.href = authUrl;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect to Strava');
-      setLoading(false);
-    }
+  const connectStrava = () => {
+    const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&approval_prompt=force&scope=activity:read_all`;
+    window.location.href = authUrl;
   };
 
   const exchangeToken = async (code: string) => {
@@ -119,18 +92,13 @@ export function useStrava() {
       setLoading(true);
       setError(null);
 
-      const redirectUri = getRedirectUri();
-      const apiUrl = `${supabaseUrl}/functions/v1/strava-auth?action=token`;
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/.netlify/functions/strava-token', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           code,
-          redirect_uri: redirectUri,
         }),
       });
 
@@ -157,12 +125,9 @@ export function useStrava() {
 
   const refreshToken = async (refresh_token: string) => {
     try {
-      const apiUrl = `${supabaseUrl}/functions/v1/strava-auth?action=refresh`;
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/.netlify/functions/strava-refresh', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -186,7 +151,6 @@ export function useStrava() {
       setTokens(tokenData);
     } catch (err) {
       console.error('Failed to refresh token:', err);
-      // If refresh fails, clear tokens and require re-authentication
       disconnect();
     }
   };
